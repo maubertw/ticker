@@ -2,21 +2,27 @@ import React, { Component } from 'react';
 import Row from './row'
 import Mid from './mid'
 import units from './dummy-data'
+import {open, wssIntake} from './subscribe'
+
+//could make two aligned tables with the arr split by the high and low that places all the higher
+
 
 
 
 class Book extends Component {
   constructor(){
     super()
-    const total = units.reduce((total, unit) => total + unit.price, 0)
     this.state = {
         date: JSON.stringify(Date(Date.now())),
-        mid: total/units.length,
-        lastMid: 88,
-        total,
+        splitIndex: 0,
+        mid: 0,
+        lastMid: 0,
+        total: 0,
         units
       }
+      this.handleWSSFeed = this.handleWSSFeed.bind(this)
   }
+
 
   componentDidMount() {
     this.intervalID = setInterval(
@@ -24,11 +30,33 @@ class Book extends Component {
         date: JSON.stringify(Date(Date.now()))
       }),
       1000
-    );
+    )
+    this.socket = new WebSocket('wss://ws-feed.pro.coinbase.com');
+    open(this.socket)
+    let self = this
+    let collectData = function(e) {
+      self.handleWSSFeed(e)
+    }
+    this.socket.addEventListener('message', function(event){
+      collectData(event)
+    })
   }
 
+  handleWSSFeed = (event) => {
+    //console.log(event.data)
+    let newData = wssIntake(event.data, this.state.units, this.state.splitIndex, this.state.mid)
+        this.setState({
+          splitIndex: newData.splitIndex,
+          //units: newData.newState,
+          total: newData.totalShares,
+          mid: newData.newMidPrice
+        })
+  }
+
+
   componentWillUnmount() {
-    clearInterval(this.intervalID);
+    clearInterval(this.intervalID)
+    this.socket.close()
   }
 
 
@@ -42,15 +70,21 @@ class Book extends Component {
           <span className='date'>{date}</span>
           </th>
             <tbody>
-              {
-                this.state.units.map(unit => {
-                  if(!unit.size){
-                    return <Mid mid={mid} isUp={mid > lastMid} change={change} />
-                  }else{
-                    return <Row unit={{...unit, percent: (unit.size/this.state.total)*800}} />
-                  }
+              <span>
+                {
+                  this.state.units.slice(0, this.state.splitIndex).map(unit => {
+                      return <Row unit={{...unit, percent: (unit.size/this.state.total)*100}} />
+                  })
+                }
+              </span>
+              <Mid mid={mid} isUp={mid > lastMid} change={change} />
+              <span>
+                {
+                 this.state.units.slice( this.state.splitIndex).map(unit => {
+                  return <Row unit={{...unit, percent: (unit.size/this.state.total)*100}} />
                 })
-              }
+                }
+              </span>
           </tbody>
         </table>
       </div>)
