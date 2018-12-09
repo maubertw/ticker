@@ -1,16 +1,14 @@
 import React from 'react'
 
 
-export default ({unit}) => {
-  const { size, price, percent } = unit
+export default ({bid, percent}) => {
   return(
     <tr className='row'>
       <td className='price'>
-        {price}
+        {bid[0]}
       </td>
       <td className='size'>
-
-        <span style={{'minWidth': percent }} className='percent'>{size}</span>
+        <span style={{'minWidth': percent }} className='percent'>{bid[1]}</span>
       </td>
     </tr>
   )

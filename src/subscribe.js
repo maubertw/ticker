@@ -23,9 +23,8 @@ const subscriptionMessage = {
 
 export const open = (socket) => socket.addEventListener('open', function (event) {
       socket.send(JSON.stringify(subscriptionMessage));
-  });
 
-  // Listen for messages
+  });
 
 
 
@@ -34,82 +33,96 @@ function searchBids(price, bids) {
     let stop = bids.length - 1
     let middle = Math.floor((start + stop) / 2)
     while (+bids[middle][0] !== price && start < stop) {
-      if (price < +bids[middle][0]) {
+        console.log('bids middle', bids[middle])
+        if (price < +bids[middle][0]) {
         stop = middle - 1
-      } else {
+        } else {
         start = middle + 1
-      }
-      middle = Math.floor((start + stop) / 2)
+        }
+        middle = Math.floor((start + stop) / 2)
     }
     return (+bids[middle][0] !== price) ? [-1, middle] : [1, middle]
-  }
+}
+
 
 
 const findMidPrice = bidList => {
-    return bidList.reduce((mid, bid) => {
-        return mid + (+bid[1])
-    }, 0)/2
+    let total = bidList.reduce((mid, bid) => {
+        return mid + (+bid[0])
+    }, 0)
+    return total/bidList.length
 }
+
 
 const findTotalShares = bidList => {
     return bidList.reduce((total, bid) => {
-        return total + (+bid[2])
+        return total + (+bid[1])
     }, 0)
 }
+
+
 
 const findTotalSharesAndMedianPrice = bidList => {
     let totalShares = 0
     let midPrice = 0
     bidList.forEach(bid => {
-        totalShares += +bid[2]
-        midPrice += +bid[1]
+        totalShares += (+bid[1])
+        midPrice += (+bid[0])
     })
-    midPrice = midPrice/2
+    midPrice = midPrice/bidList.length
     return { midPrice, totalShares }
 }
+
+//findTotalSharesAndMedianPrice(listOfBids)
 
 //outputs: split index, median price, total units in the market, updated units
 
 //need to check the message type before this is run
-export function wssIntake (message, state, lastSplit, lastMid) {
+export function wssIntake (message){
+    let newState = message
+    let splitIndex;
+    let midPrice;
+    let totalShares;
+    //newState = message.bids
+    let newSharesAndMedian = findTotalSharesAndMedianPrice(newState)
+    midPrice = newSharesAndMedian.midPrice
+    totalShares = newSharesAndMedian.totalShares
+    splitIndex = searchBids(midPrice, newState)[1]
+    return {splitIndex, newState, totalShares, newMidPrice: midPrice}
+}
+//outputs: split index, median price, total units in the market, updated units
+
+//need to check the message type before this is run
+export function wssTick (changes, state, lastSplit, lastMid) {
     let newState;
     let splitIndex;
     let midPrice;
     let totalShares;
-    if (message.type === 'snapshot'){
-        //if this is the first message, we use the new array as state
-        newState = message.bids
+    //determine if that price exists
+    let newPricePointIndex = searchBids(changes[1], state)
+    //declare the new bid
+    let newBid = [+changes[1], +changes[2]]
+    if(newPricePointIndex[0] > 0){
+      //if it exists replace the old one with the new updated shares
+      newState = state.splice(newPricePointIndex[1], 1, newBid)
+      //everything except the total shares stays the same
+      splitIndex = lastSplit
+      midPrice = lastMid
+      totalShares = findTotalShares(newState)
+    }else{
+        //place it where it needs to go
+        state.splice(newPricePointIndex[1], 0, newBid)
+        newState = state
+        //everything has to change
         let newSharesAndMedian = findTotalSharesAndMedianPrice(newState)
         midPrice = newSharesAndMedian.midPrice
         totalShares = newSharesAndMedian.totalShares
         splitIndex = searchBids(midPrice, newState)[1]
-    } else if(message.type === 'l2update'){
-        //extract the part to be changes
-        let { changes } = message
-        //determine if that price exists
-        let newPricePointIndex = searchBids(changes[1], state)
-        //declare the new bid
-        let newBid = [changes[1], changes[2]]
-        if(newPricePointIndex[0] > 0){
-            //if it exists replace the old one with the new updated shares
-            newState = state.splice(newPricePointIndex[1], 1, newBid)
-            //everything except the total shares stays the same
-            splitIndex = lastSplit
-            midPrice = lastMid
-            totalShares = findTotalShares(newState)
-        }else{
-            //place it where it needs to go
-            newState = state.splice(newPricePointIndex[1], 0, newBid)
-            //everything has to change
-            let newSharesAndMedian = findTotalSharesAndMedianPrice(newState)
-            midPrice = newSharesAndMedian.midPrice
-            totalShares = newSharesAndMedian.totalShares
-            splitIndex = searchBids(midPrice, newState)[1]
         }
-      }
+    return {splitIndex, newState, totalShares, newMidPrice: midPrice}
+}
       //determine the split index
-      return {splitIndex, newState, totalShares, newMidPrice: midPrice}
-    }
+
 
 
 //export default {open, listen}

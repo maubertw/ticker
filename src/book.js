@@ -1,11 +1,7 @@
 import React, { Component } from 'react';
 import Row from './row'
 import Mid from './mid'
-import units from './dummy-data'
-import {open, wssIntake} from './subscribe'
-
-//could make two aligned tables with the arr split by the high and low that places all the higher
-
+import {open, wssIntake, wssTick } from './subscribe'
 
 
 
@@ -16,11 +12,12 @@ class Book extends Component {
         date: JSON.stringify(Date(Date.now())),
         splitIndex: 0,
         mid: 0,
-        lastMid: 0,
+        lastMid: 80,
         total: 0,
-        units
+        isSet: false,
+        units: []
       }
-      this.handleWSSFeed = this.handleWSSFeed.bind(this)
+
   }
 
 
@@ -34,24 +31,29 @@ class Book extends Component {
     this.socket = new WebSocket('wss://ws-feed.pro.coinbase.com');
     open(this.socket)
     let self = this
-    let collectData = function(e) {
-      self.handleWSSFeed(e)
-    }
     this.socket.addEventListener('message', function(event){
-      collectData(event)
+      event = JSON.parse(event.data)
+      if(event.type == "snapshot" && !self.state.isSet){
+        const {splitIndex, newState, totalShares, newMidPrice} = wssIntake(event.asks.slice(0, 20))
+        self.setState({
+          splitIndex,
+          mid: newMidPrice,
+          total: totalShares,
+          isSet: true,
+          units: newState
+        })
+      }else if(event.type == "l2update" && event.changes[0][0] == "sell"){
+        const {splitIndex, newState, totalShares, newMidPrice} = wssTick(event.changes[0], self.state.units, self.state.splitIndex, self.state.lastMid)
+        self.setState({
+          splitIndex,
+          mid: newMidPrice,
+          total: totalShares,
+          units: newState.slice(0, 20)
+        })
+      }
     })
   }
 
-  handleWSSFeed = (event) => {
-    //console.log(event.data)
-    let newData = wssIntake(event.data, this.state.units, this.state.splitIndex, this.state.mid)
-        this.setState({
-          splitIndex: newData.splitIndex,
-          //units: newData.newState,
-          total: newData.totalShares,
-          mid: newData.newMidPrice
-        })
-  }
 
 
   componentWillUnmount() {
@@ -61,8 +63,8 @@ class Book extends Component {
 
 
   render (){
-    const { mid, lastMid, date } = this.state
-    const change = (((mid-lastMid)/lastMid)*100).toFixed(2)
+    const { mid, lastMid, date, units } = this.state
+    const change = lastMid > 0 ? (((mid-lastMid)/lastMid)*100).toFixed(2) : ''
     return(
       <div className='book'>
         <table>
@@ -71,17 +73,19 @@ class Book extends Component {
           </th>
             <tbody>
               <span>
-                {
-                  this.state.units.slice(0, this.state.splitIndex).map(unit => {
-                      return <Row unit={{...unit, percent: (unit.size/this.state.total)*100}} />
+                 {
+                  units.length > 0 && units.slice(0, this.state.splitIndex).map(unit => {
+                      return <Row bid={unit} percent={(+unit[1]/this.state.total)*800} />
                   })
                 }
               </span>
-              <Mid mid={mid} isUp={mid > lastMid} change={change} />
+              {
+                units.length > 0 && <Mid mid={mid} isUp={mid > lastMid} change={change} />
+              }
               <span>
-                {
-                 this.state.units.slice( this.state.splitIndex).map(unit => {
-                  return <Row unit={{...unit, percent: (unit.size/this.state.total)*100}} />
+              {
+                 units.length > 0 &&  units.slice(this.state.splitIndex).map(unit => {
+                  return <Row bid={unit} percent={(unit[1]/this.state.total)*800} />
                 })
                 }
               </span>

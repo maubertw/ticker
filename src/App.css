@@ -1,8 +1,7 @@
 .App {
   display: flex;
   justify-content: center;
-  padding-top: 10vh;
-  height: 100vh;
+  padding: 10vh 0;
   width: 100vw;
   background-color: #041d44;
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
