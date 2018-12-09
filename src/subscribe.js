@@ -3,7 +3,6 @@ const subscriptionMessage = {
     "type": "subscribe",
     "product_ids": [
         "ETH-USD",
-        "ETH-EUR"
     ],
     "channels": [
         "level2",
@@ -16,10 +15,7 @@ const subscriptionMessage = {
     ]
   }
 
-  // Create WebSocket connection.
-//const socket = new WebSocket('wss://ws-feed.pro.coinbase.com');
 
-  // Connection opened
 
 export const open = (socket) => socket.addEventListener('open', function (event) {
       socket.send(JSON.stringify(subscriptionMessage));
@@ -33,7 +29,6 @@ function searchBids(price, bids) {
     let stop = bids.length - 1
     let middle = Math.floor((start + stop) / 2)
     while (+bids[middle][0] !== price && start < stop) {
-        console.log('bids middle', bids[middle])
         if (price < +bids[middle][0]) {
         stop = middle - 1
         } else {
@@ -73,26 +68,19 @@ const findTotalSharesAndMedianPrice = bidList => {
     return { midPrice, totalShares }
 }
 
-//findTotalSharesAndMedianPrice(listOfBids)
 
-//outputs: split index, median price, total units in the market, updated units
-
-//need to check the message type before this is run
-export function wssIntake (message){
-    let newState = message
+export function wssIntake (newState){
     let splitIndex;
     let midPrice;
     let totalShares;
-    //newState = message.bids
     let newSharesAndMedian = findTotalSharesAndMedianPrice(newState)
     midPrice = newSharesAndMedian.midPrice
     totalShares = newSharesAndMedian.totalShares
     splitIndex = searchBids(midPrice, newState)[1]
     return {splitIndex, newState, totalShares, newMidPrice: midPrice}
 }
-//outputs: split index, median price, total units in the market, updated units
 
-//need to check the message type before this is run
+
 export function wssTick (changes, state, lastSplit, lastMid) {
     let newState;
     let splitIndex;
@@ -121,37 +109,7 @@ export function wssTick (changes, state, lastSplit, lastMid) {
         }
     return {splitIndex, newState, totalShares, newMidPrice: midPrice}
 }
-      //determine the split index
 
-
-
-//export default {open, listen}
-
-
-
-
-// const exampleData = [
-
-// {"type":"l2update",
-// "product_id":"ETH-USD",
-// "time":"2018-12-07T15:48:35.907Z",
-// "changes":[["buy","85.59000000","0.01"]]},
-
-// {"type":"l2update",
-// "product_id":"ETH-EUR",
-// "time":"2018-12-07T15:48:35.911Z",
-// "changes":[["sell","76.45000000","0"]]},
-
-// {"type":"l2update",
-// "product_id":"ETH-USD",
-// "time":"2018-12-07T15:48:35.915Z",
-// "changes":[["buy","85.26000000","12.51295965"]]},
-
-// {"type":"l2update",
-// "product_id":"ETH-USD",
-// "time":"2018-12-07T15:48:35.943Z",
-// "changes":[["sell","85.69000000","20"]]}
-// ]
 
 
 
