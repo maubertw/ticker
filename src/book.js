@@ -43,8 +43,7 @@ class Book extends Component {
           isSet: true
         })
       }else if(event.type == "l2update" && event.changes[0][0] == "buy"){
-        //console.log('event', event)
-//console.log('self', self.state.units)
+        //console.log(event)
         const {splitIndex, newState, totalShares, newMidPrice} = wssTick(event.changes[0], self.state.units, self.state.splitIndex, self.state.lastMid)
         self.setState({
           splitIndex,
@@ -52,7 +51,7 @@ class Book extends Component {
           total: totalShares,
           units: newState
         })
-      }
+       }
     })
   }
 
@@ -67,7 +66,11 @@ class Book extends Component {
 
 
   render (){
+
     const { mid, lastMid, date, units } = this.state
+    const entries = Object.keys(units).sort((a, b) => {
+      return b - a
+    })
     const change = lastMid > 0 ? (((mid-lastMid)/lastMid)*100).toFixed(2) : ''
     return(
       <div className='book'>
@@ -78,18 +81,18 @@ class Book extends Component {
             <tbody>
               <span>
                  {
-                  units.length > 0 && units.slice(0, this.state.splitIndex).map(unit => {
-                      return <Row bid={unit} percent={(+unit[1]/this.state.total)*800} />
+                  entries.length > 0 && entries.slice(0, this.state.splitIndex).map(entry => {
+                      return <Row bid={[entry, units[entry]]} percent={(+units[entry]/this.state.total)*10} />
                   })
                 }
               </span>
               {
-                units.length > 0 && <Mid mid={mid} isUp={mid > lastMid} change={change} />
+                entries.length > 0 && <Mid mid={mid} isUp={mid > lastMid} change={change} />
               }
               <span>
               {
-                 units.length > 0 &&  units.slice(this.state.splitIndex).map(unit => {
-                  return <Row bid={unit} percent={(unit[1]/this.state.total)*800} />
+                 entries.length > 0 &&  entries.slice(this.state.splitIndex).map(entry => {
+                  return <Row bid={[entry, units[entry]]} percent={(+units[entry]/this.state.total)*10} />
                 })
                 }
               </span>

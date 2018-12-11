@@ -8,7 +8,8 @@ export default ({bid, percent}) => {
         {bid[0]}
       </td>
       <td className='size'>
-        <span style={{'minWidth': percent }} className='percent'>{bid[1]}</span>
+      {bid[1]}
+        {/* <span style={{'minWidth': percent }} className='percent'>{bid[1]}</span> */}
       </td>
     </tr>
   )
