@@ -14,8 +14,8 @@ class Book extends Component {
         mid: 0,
         lastMid: 80,
         total: 0,
-        isSet: false,
-        units: []
+        units: [],
+        isSet: false
       }
 
   }
@@ -34,26 +34,30 @@ class Book extends Component {
     this.socket.addEventListener('message', function(event){
       event = JSON.parse(event.data)
       if(event.type == "snapshot" && !self.state.isSet){
-        const {splitIndex, newState, totalShares, newMidPrice} = wssIntake(event.asks.slice(0, 20))
+        const {splitIndex, newState, totalShares, newMidPrice} = wssIntake(event.bids.slice(0, 20))
         self.setState({
           splitIndex,
           mid: newMidPrice,
           total: totalShares,
-          isSet: true,
-          units: newState
+          units: newState,
+          isSet: true
         })
-      }else if(event.type == "l2update" && event.changes[0][0] == "sell"){
+      }else if(event.type == "l2update" && event.changes[0][0] == "buy"){
+        //console.log('event', event)
+//console.log('self', self.state.units)
         const {splitIndex, newState, totalShares, newMidPrice} = wssTick(event.changes[0], self.state.units, self.state.splitIndex, self.state.lastMid)
         self.setState({
           splitIndex,
           mid: newMidPrice,
           total: totalShares,
-          units: newState.slice(0, 20)
+          units: newState
         })
       }
     })
   }
 
+  // newState = [...state.slice(0, index), ...newBid, ...state.slice(index+1)]
+  //newState = [...state.slice(0, index+1), ...newBid, state.slice(index+1)]
 
 
   componentWillUnmount() {
@@ -100,12 +104,3 @@ export default Book
 
 
 
-//there will be something to sort all of the prices - that also must calculate the mid price
-//binary tree that has the midpoint as the root node?
-//an array that contains a midpoint that is being dynamically generated
-//the additions get pushed or sliced in depending on where the midpoint is
-
-//midpoint stableizer(arr, values){
-  //returns an array that has the values sorted, and the midpoint
-
-//}

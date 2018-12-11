@@ -6,12 +6,6 @@ const subscriptionMessage = {
     ],
     "channels": [
         "level2",
-        {
-            "name": "ticker",
-            "product_ids": [
-                "ETH-USD"
-            ]
-        }
     ]
   }
 
@@ -22,13 +16,15 @@ export const open = (socket) => socket.addEventListener('open', function (event)
 
   });
 
-
+//need to make sure the type is correct in the search bids function while continuing to work on the tick logic.  zeros are taken care of, now we have duplicates
 
 function searchBids(price, bids) {
+    price = parseFloat(parseFloat(price).toFixed(2))
     let start = 0
     let stop = bids.length - 1
     let middle = Math.floor((start + stop) / 2)
-    while (+bids[middle][0] !== price && start < stop) {
+    //console.log(bids.length)
+    while (middle > 2 && +bids[middle][0] !== price && start < stop) {
         if (price < +bids[middle][0]) {
         stop = middle - 1
         } else {
@@ -76,39 +72,111 @@ export function wssIntake (newState){
     let newSharesAndMedian = findTotalSharesAndMedianPrice(newState)
     midPrice = newSharesAndMedian.midPrice
     totalShares = newSharesAndMedian.totalShares
+    //console.log('here', midPrice, totalShares, newState)
     splitIndex = searchBids(midPrice, newState)[1]
     return {splitIndex, newState, totalShares, newMidPrice: midPrice}
 }
 
 
 export function wssTick (changes, state, lastSplit, lastMid) {
-    let newState;
-    let splitIndex;
-    let midPrice;
-    let totalShares;
-    //determine if that price exists
-    let newPricePointIndex = searchBids(changes[1], state)
-    //declare the new bid
-    let newBid = [+changes[1], +changes[2]]
-    if(newPricePointIndex[0] > 0){
-      //if it exists replace the old one with the new updated shares
-      newState = state.splice(newPricePointIndex[1], 1, newBid)
-      //everything except the total shares stays the same
+
+  let newState;
+  let splitIndex;
+  let midPrice;
+  let totalShares;
+  //determine if that price exists
+//    console.log('changes', changes)
+//console.log('state', state)
+  let newPricePointIndex = searchBids(changes[1], state)
+  const index = newPricePointIndex[1]
+  const match = newPricePointIndex[0]
+  //declare the new bid
+  let newBid = [+changes[1], +changes[2]]
+  if(parseFloat(newBid[1]) === 0){
+      newState = [...state.slice(0, index), ...state.slice(index+1)]
+      let newSharesAndMedian = findTotalSharesAndMedianPrice(newState)
+      midPrice = newSharesAndMedian.midPrice
+      totalShares = newSharesAndMedian.totalShares
+      splitIndex = searchBids(midPrice, newState)[1]
+      return {splitIndex, newState, totalShares, newMidPrice: midPrice}
+
+  }
+  let price = (state[index][0]*100).toFixed()
+  let incomingPrice = (newBid[0]*100).toFixed()
+
+  //and the price point is the same, replace it
+  if((newBid[0]*100).toFixed() === (state[index][0]*100).toFixed()){
+      let tempState = state.filter(bid => {
+        let bidPrice = (bid[0]*100).toFixed()
+        return bidPrice !== price
+      })
+      newState = [...tempState, newBid]
       splitIndex = lastSplit
       midPrice = lastMid
       totalShares = findTotalShares(newState)
-    }else{
-        //place it where it needs to go
-        state.splice(newPricePointIndex[1], 0, newBid)
-        newState = state
-        //everything has to change
-        let newSharesAndMedian = findTotalSharesAndMedianPrice(newState)
-        midPrice = newSharesAndMedian.midPrice
-        totalShares = newSharesAndMedian.totalShares
-        splitIndex = searchBids(midPrice, newState)[1]
-        }
-    return {splitIndex, newState, totalShares, newMidPrice: midPrice}
+      return {splitIndex, newState, totalShares, newMidPrice: midPrice}
+  }else if(match === -1){
+      //console.log('incoming', incomingPrice === price, incomingPrice, price)
+      //place it where it needs to go
+      newState = [...state, newBid]
+      //everything has to change
+      let newSharesAndMedian = findTotalSharesAndMedianPrice(newState)
+      midPrice = newSharesAndMedian.midPrice
+      totalShares = newSharesAndMedian.totalShares
+      splitIndex = searchBids(midPrice, newState)[1]
+      return {splitIndex, newState, totalShares, newMidPrice: midPrice}
+
+  }
+
 }
+
+
+
+// export function wssTick (changes, state, lastSplit, lastMid) {
+
+//     let newState;
+//     let splitIndex;
+//     let midPrice;
+//     let totalShares;
+//     //determine if that price exists
+//     let newPricePointIndex = searchBids(changes[1], state)
+//     const index = newPricePointIndex[1]
+//     //declare the new bid
+//     let newBid = [+changes[1], +changes[2]]
+//     if(parseFloat(newBid[1]) === 0){
+//         newState = [...state.slice(0, index), ...state.slice(index+1)]
+//         console.log('new', newState)
+//         let newSharesAndMedian = findTotalSharesAndMedianPrice(newState)
+//         midPrice = newSharesAndMedian.midPrice
+//         totalShares = newSharesAndMedian.totalShares
+//         splitIndex = searchBids(midPrice, newState)[1]
+//         return {splitIndex, newState, totalShares, newMidPrice: midPrice}
+
+//     }
+//     //and the price point is the same, replace it
+//     if(newBid[1] === state[index][0] && newPricePointIndex > 0){
+//         state.splice(newPricePointIndex[1], 1, newBid)
+//         newState = state.slice
+//           //everything except the total shares stays the same
+//           splitIndex = lastSplit
+//           midPrice = lastMid
+//           totalShares = findTotalShares(newState)
+//     }else{
+//         //place it where it needs to go
+//         state.splice(newPricePointIndex[1], 0, newBid)
+//         newState = state
+//         //everything has to change
+//         let newSharesAndMedian = findTotalSharesAndMedianPrice(newState)
+//         midPrice = newSharesAndMedian.midPrice
+//         totalShares = newSharesAndMedian.totalShares
+//         splitIndex = searchBids(midPrice, newState)[1]
+
+//     }
+//     return {splitIndex, newState, totalShares, newMidPrice: midPrice}
+
+// }
+
+
 
 
 
