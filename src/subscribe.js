@@ -39,7 +39,6 @@ const insertBid = (feed, bid) => {
     let high = feed.length-1
     let mid = Math.floor(feed.length/2)
     while(low < high){
-
       if( Math.abs(+feed[mid] - (+bid)) < Math.abs(+feed[closestIndex] - (+bid)) ){
           closestIndex = mid
       }
@@ -51,7 +50,7 @@ const insertBid = (feed, bid) => {
           mid = Math.floor(high+low/ 2)
       }
     }
-    let sortedFeed = [...feed.slice(0, closestIndex, bid, ...feed.slice(closestIndex))]
+    let sortedFeed = [...feed.slice(0, closestIndex), bid, ...feed.slice(closestIndex)]
     return sortedFeed
 }
 
@@ -71,7 +70,6 @@ export const handleWSSFeed = (self) => {
             totalOfPrices
           })
         }else if(event.type == "l2update" && event.changes[0][0] == "buy"){
-
           const {splitIndex, newState, newMidPrice, sortedFeed, totalOfPrices, totalShares} = wssTick
           (event.changes[0], self.state.units, self.state.splitIndex, self.state.lastMid, self.state.sortedFeed, self.state.totalOfPrices, self.state.total)
           self.setState({
@@ -123,9 +121,6 @@ const findTotalSharesAndMedianPrice = bidList => {
 
 
 export function wssIntake (feed){
-    let splitIndex;
-    let midPrice;
-    let totalShares;
     let newState = {}
     feed.forEach(bid => {
         let key = (bid[0]*100).toFixed()
@@ -134,16 +129,15 @@ export function wssIntake (feed){
     })
     let newSharesAndMedian = findTotalSharesAndMedianPrice(feed)
     let totalOfPrices = newSharesAndMedian.totalOfPrices
-    midPrice = newSharesAndMedian.midPrice
-    totalShares = newSharesAndMedian.totalShares
-    splitIndex = feed.length/2
+    let midPrice = newSharesAndMedian.midPrice
+    let totalShares = newSharesAndMedian.totalShares
+    let splitIndex = feed.length/2
     let sortedFeed = Object.keys(newState).sort((a, b) => {
         return b - a
       })
     return {splitIndex, newState, newMidPrice: midPrice, sortedFeed, totalOfPrices, totalShares}
 }
 
-//totalShares
 
 export function wssTick (changes, state, lastSplit, lastMid, sorted, totalOfPrices, totalShares) {
   let length = sorted.length
@@ -156,26 +150,48 @@ export function wssTick (changes, state, lastSplit, lastMid, sorted, totalOfPric
   let size = (+changes[2]*100).toFixed()
   if(state[price]){
       if(+size === 0){
-        let { newTotalPrice, newTotalShares, newMid } = findMedian(totalOfPrices, totalShares, [price, state[price]], [price, size], state.length, lastMid,  'delete')
+        let { newTotalPrice, newTotalShares, newMid } =
+        findMedian(totalOfPrices,
+            totalShares,
+            [price, state[price]],
+            [price, size],
+            state.length,
+            lastMid,
+            'delete')
         let old = {...state}
         let {price, ...updated} = old;
+        newState = updated
         newSortedFeed = sorted.filter(bid => +bid[0] != price)
         midPrice = newMid
         totalNumShares = newTotalShares
         totalOfPrices = newTotalPrice
         length--
-        newState = updated
       }else{
           newState[price] = size
-          let { newTotalPrice, newTotalShares, newMid } = findMedian(totalOfPrices, totalShares, [price, state[price]], [price, size], state.length, lastMid,  'update')
+          let { newTotalPrice, newTotalShares, newMid } =
+          findMedian(totalOfPrices,
+            totalShares,
+            [price, state[price]],
+            [price, size],
+            state.length,
+            lastMid,
+            'update')
           midPrice = newMid
           totalNumShares = newTotalShares
           totalOfPrices = newTotalPrice
       }
   }else{
       newState[price] = size
-      let newSortedFeed =  insertBid(sorted, price)
-      let { newTotalPrice, newTotalShares, newMid } = findMedian(totalOfPrices, totalShares, [price, state[price]], [price, size], state.length, lastMid,  'add')
+      //console.log(newSortedFeed)
+      newSortedFeed =  insertBid(sorted, price)
+      let { newTotalPrice, newTotalShares, newMid } =
+      findMedian(totalOfPrices,
+        totalShares,
+        [price, state[price]],
+        [price, size],
+        state.length,
+        lastMid,
+        'add')
       length++
       midPrice = newMid
       totalNumShares = newTotalShares
