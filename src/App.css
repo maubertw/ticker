@@ -7,7 +7,11 @@
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 
-
+span {
+  margin: 0;
+  padding: 0;
+  display: inline-block;
+}
 
 .book {
   width: 50vw;
@@ -17,24 +21,35 @@
 th {
   height: 30px;
   padding: 10px 0;
+  /* display: inline-block */
 }
 
 #head {
   background-color: lightgray;
+
 }
 
 #mid {
   height: 50px;
-  padding-top: 0px
+  padding-top: 0px;
+
 }
 
 table {
   width: 520px;
+  border-spacing: 0
 }
 
 td {
   max-width: 260px;
   min-width: 260px;
+
+
+}
+
+.row {
+  font-size: 10px;
+  margin: 0
 }
 
 .date {
@@ -49,7 +64,9 @@ td {
 table, th, td {
   border: 1px solid black;
   border-collapse: collapse;
-  background-color: white
+  background-color: white;
+
+
 }
 
 .percent {
