@@ -52,7 +52,9 @@ class Book extends Component {
               <span>
                  {
                   sortedFeed.length > 0 && sortedFeed.slice(0, this.state.splitIndex).map(entry => {
+                    if(+units[entry] > 0){
                       return <Row bid={[entry, units[entry]]} />
+                    }
                   })
                 }
               </span>
@@ -62,7 +64,9 @@ class Book extends Component {
               <span>
               {
                  sortedFeed.length > 0 &&  sortedFeed.slice(this.state.splitIndex).map(entry => {
-                  return <Row bid={[entry, units[entry]]}  />
+                  if(+units[entry] > 0){
+                    return <Row bid={[entry, units[entry]]} />
+                  }
                 })
                 }
               </span>

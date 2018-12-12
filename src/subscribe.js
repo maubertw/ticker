@@ -33,8 +33,11 @@ export const open = (socket) => socket.addEventListener('open', function (event)
 
   });
 
+  //produces very inaccurate results
+  //esp with much lower indexes
+  //need to find a way to get the correct index
 const insertBid = (feed, bid) => {
-    let closestIndex = Math.floor(feed.length/2)
+    let closestIndex = 0
     let low = 0
     let high = feed.length-1
     let mid = Math.floor(feed.length/2)
@@ -59,7 +62,8 @@ export const handleWSSFeed = (self) => {
   self.socket.addEventListener('message', function(event){
         event = JSON.parse(event.data)
         if(event.type == "snapshot" && !self.state.isSet){
-          const {splitIndex, newState, totalShares, newMidPrice, sortedFeed, totalOfPrices } = wssIntake(event.bids.slice(0, 200))
+          const {splitIndex, newState, totalShares, newMidPrice, sortedFeed, totalOfPrices } = wssIntake(event.bids.slice(0, 50))
+
           self.setState({
             splitIndex,
             mid: newMidPrice,
@@ -70,11 +74,13 @@ export const handleWSSFeed = (self) => {
             totalOfPrices
           })
         }else if(event.type == "l2update" && event.changes[0][0] == "buy"){
-          const {splitIndex, newState, newMidPrice, sortedFeed, totalOfPrices, totalShares} = wssTick
-          (event.changes[0], self.state.units, self.state.splitIndex, self.state.lastMid, self.state.sortedFeed, self.state.totalOfPrices, self.state.total)
+          const {splitIndex, newState, newMidPrice, sortedFeed, totalOfPrices, totalShares} = wssTick(event.changes[0],
+            self.state.units,
+            self.state.splitIndex, self.state.lastMid, self.state.sortedFeed, self.state.totalOfPrices, self.state.total)
           self.setState({
             splitIndex,
             mid: newMidPrice,
+            lastMid: self.state.mid,
             total: totalShares,
             units: newState,
             sortedFeed,
@@ -89,14 +95,17 @@ function findMedian(allPrice, totalSize, bid, change, length, midPrice, type){
     let newTotalShares
     let newTotalPrice
     let newMid
+    //console.log('allprice total',allPrice,'total size', totalSize, 'bid', bid, 'newbid', change, 'length',length, 'midprice', midPrice, 'type', type)
     if(type === 'delete'){
+        //console.log('allprice total', allPrice,'total size', totalSize, 'bid', bid, 'length',length, 'type', type)
         newTotalPrice = allPrice - (+bid[0])
         newTotalShares = totalSize - (+bid[1])
         newMid = newTotalPrice/length
+        //console.log('newP', newTotalPrice, 'newS', newTotalShares, 'mid', newMid)
     }else if(type === 'update'){
       newTotalShares = +bid[1] > +change[1]
-        ? totalSize - (+bid[1] - +change[1])
-        : totalSize + (+change[1] - +bid[1])
+        ? Math.abs(totalSize - +bid[1] - +change[1])
+        : Math.abs(totalSize + (+change[1] - +bid[1]))
       newMid = midPrice
       newTotalPrice = allPrice
     }else if(type === 'add'){
@@ -104,6 +113,7 @@ function findMedian(allPrice, totalSize, bid, change, length, midPrice, type){
         newTotalPrice = allPrice + +change[0]
         newMid = newTotalPrice/(length+1)
     }
+     //console.log('total price, total shares, mid', newTotalPrice, newTotalShares, newMid)
     return {newTotalPrice, newTotalShares, newMid}
 }
 
@@ -140,32 +150,35 @@ export function wssIntake (feed){
 
 
 export function wssTick (changes, state, lastSplit, lastMid, sorted, totalOfPrices, totalShares) {
-  let length = sorted.length
-  let newState = {...state}
-  let splitIndex;
-  let midPrice;
-  let totalNumShares;
-  let newSortedFeed = [...sorted];
-  let price = (+changes[1]*100).toFixed()
-  let size = (+changes[2]*100).toFixed()
-  if(state[price]){
-      if(+size === 0){
-        let { newTotalPrice, newTotalShares, newMid } =
+
+    let length = sorted.length
+    let newState = {...state}
+    let splitIndex;
+    let midPrice;
+    let totalNumShares;
+    let newSortedFeed = [...sorted];
+    let price = (+changes[1]*100).toFixed()
+    let size = (+changes[2]*100).toFixed()
+    //console.log('one sh', totalShares, size)
+    if(state[price]){
+        //console.log('two sh', totalShares, size)
+        if(+size === 0){
+            //console.log('three sh', totalShares, size)
+            let p = (+changes[1]*100).toFixed()
+            let { newTotalPrice, newTotalShares, newMid } =
         findMedian(totalOfPrices,
             totalShares,
-            [price, state[price]],
-            [price, size],
-            state.length,
+            [p, state[p]],
+            [p, size],
+            length,
             lastMid,
             'delete')
-        let old = {...state}
-        let {price, ...updated} = old;
-        newState = updated
-        newSortedFeed = sorted.filter(bid => +bid[0] != price)
         midPrice = newMid
+        console.log('delete', midPrice)
         totalNumShares = newTotalShares
         totalOfPrices = newTotalPrice
         length--
+        //console.log('length1', length)
       }else{
           newState[price] = size
           let { newTotalPrice, newTotalShares, newMid } =
@@ -173,53 +186,39 @@ export function wssTick (changes, state, lastSplit, lastMid, sorted, totalOfPric
             totalShares,
             [price, state[price]],
             [price, size],
-            state.length,
+            length,
             lastMid,
             'update')
           midPrice = newMid
+          //keeps original mid
+          console.log('update', midPrice)
           totalNumShares = newTotalShares
           totalOfPrices = newTotalPrice
       }
   }else{
       newState[price] = size
-      //console.log(newSortedFeed)
       newSortedFeed =  insertBid(sorted, price)
       let { newTotalPrice, newTotalShares, newMid } =
       findMedian(totalOfPrices,
         totalShares,
         [price, state[price]],
         [price, size],
-        state.length,
+        length,
         lastMid,
         'add')
       length++
+      //console.log('length2', length)
       midPrice = newMid
+      //mid is not a number
+      console.log('add', midPrice)
       totalNumShares = newTotalShares
       totalOfPrices = newTotalPrice
   }
-  return {splitIndex: length/2, newState, newMidPrice: midPrice, sortedFeed: newSortedFeed, totalOfPrices}
+//   console.log('splitIndex', length/2, 'newState', newState, 'newMidPrice', midPrice, 'sortedFeed', newSortedFeed, 'price total', totalOfPrices)
+  return {splitIndex: length/2, newState, newMidPrice: midPrice, sortedFeed: newSortedFeed, totalOfPrices, totalShares: totalNumShares}
 }
 
 
 
 
 
-
-
-
-
-
-
-// const findMidPrice = bidList => {
-//     let total = bidList.reduce((mid, bid) => {
-//         return mid + (+bid[0])
-//     }, 0)
-//     return total/bidList.length
-// }
-
-
-// const findTotalShares = bidList => {
-//     return bidList.reduce((total, bid) => {
-//         return total + (+bid[1])
-//     }, 0)
-// }
