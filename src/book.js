@@ -10,7 +10,7 @@ class Book extends Component {
     this.state = {
         date: JSON.stringify(Date(Date.now())),
         price: 0,
-        prevPrice: 0,
+        prevPrice: 'unset',
         bidBook: {},
         sortedBids: [],
         lowBid: 0,
@@ -39,9 +39,19 @@ class Book extends Component {
   }
 
 
+  //if the prev price is unset
+    //change message = ''
+  //else change message = ` ${change}%`
+
+
+
+
+
   render (){
     const { date, price, prevPrice, bidBook, sortedBids, askBook, sortedAsks } = this.state
-    const change = price > prevPrice ? (((price-prevPrice)/prevPrice)*100).toFixed(2) : ''
+    const change = price != prevPrice ? (((price-prevPrice)/prevPrice)*100).toFixed(2) : ''
+    const isUp = price >= prevPrice ? 'green' : 'red'
+    const changeMessage = prevPrice != 'unset' && prevPrice != price ? ` ${change}%` : '0%'
     return(
       <div className='book'>
         <table>
@@ -50,16 +60,18 @@ class Book extends Component {
           </th>
             <tbody>
                {
-                  sortedAsks.length > 0 && sortedAsks.slice(0, 10).map(ask => {
+                  sortedAsks.length > 0 && sortedAsks.slice(-49).map(ask => {
                     if(askBook[ask] > 0){
-                      return <Row bid={[ask, askBook[ask]]} type={'ask'} />}
+                      return <Row bid={[ask, askBook[ask]]} type={'ask'} classStyle='row green'/>}
                   })
                 }
-              { price > 0 && <Mid mid={price} isUp={price > prevPrice} change={change} /> }
+              { price > 0 ? <Mid price={price} isUp={isUp} changeMessage={changeMessage} />
+                          : <th colSpan='2'>OBTAINING PRICE</th>
+              }
                 {
-                  sortedBids.length > 0 && sortedBids.slice(0, 10).map(bid => {
+                  sortedBids.length > 0 && sortedBids.slice(0, 49).map(bid => {
                     if(+bidBook[bid] > 0){
-                      return <Row bid={[bid, bidBook[bid]]} type={'bid'}/> }
+                      return <Row bid={[bid, bidBook[bid]]} type={'bid'} classStyle='row red'/> }
                   })
                 }
           </tbody>
