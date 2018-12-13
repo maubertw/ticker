@@ -3,18 +3,6 @@ import Row from './row'
 import Mid from './mid'
 import {open, wssIntake, wssTick, unsubscribe, date, handleWSSFeed } from './subscribe'
 
-// date: JSON.stringify(Date(Date.now())),
-//         splitIndex: 0,
-//         mid: 0,
-//         lastMid: 80,
-//         total: 0,
-//         units: {},
-//         isSet: false,
-//         sortedFeed: [],
-//         totalOfPrices: 0
-
-
-//pricelevels don't have to already be there - you can use the 1-100
 
 class Book extends Component {
   constructor(){
@@ -33,7 +21,6 @@ class Book extends Component {
         // bidShares: 0,
         isSet: false,
       }
-
   }
 
 
@@ -53,7 +40,6 @@ class Book extends Component {
 
 
   render (){
-
     const { date, price, prevPrice, bidBook, sortedBids, askBook, sortedAsks } = this.state
     const change = price > prevPrice ? (((price-prevPrice)/prevPrice)*100).toFixed(2) : ''
     return(
@@ -63,27 +49,19 @@ class Book extends Component {
           <span className='date'>{date}</span>
           </th>
             <tbody>
-              <span>
-                 {
-                  sortedAsks.length > 0 && sortedAsks.map(ask => {
+               {
+                  sortedAsks.length > 0 && sortedAsks.slice(0, 10).map(ask => {
                     if(askBook[ask] > 0){
-                      return <Row bid={[ask, askBook[ask]]} />
-                    }
+                      return <Row bid={[ask, askBook[ask]]} type={'ask'} />}
                   })
                 }
-              </span>
-              {
-                price > 0 && <Mid mid={price} isUp={price > prevPrice} change={change} />
-              }
-              <span>
-              {
-                 sortedBids.length > 0 && sortedBids.map(bid => {
-                  if(+bidBook[bid] > 0){
-                    return <Row bid={[bid, bidBook[bid]]} />
-                  }
-                })
+              { price > 0 && <Mid mid={price} isUp={price > prevPrice} change={change} /> }
+                {
+                  sortedBids.length > 0 && sortedBids.slice(0, 10).map(bid => {
+                    if(+bidBook[bid] > 0){
+                      return <Row bid={[bid, bidBook[bid]]} type={'bid'}/> }
+                  })
                 }
-              </span>
           </tbody>
         </table>
       </div>)
@@ -93,5 +71,3 @@ class Book extends Component {
 
 export default Book
 
-// percent={(+units[entry]/this.state.total)*10
-//   percent={(+units[entry]/this.state.total)*10}
