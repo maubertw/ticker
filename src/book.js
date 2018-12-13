@@ -3,21 +3,35 @@ import Row from './row'
 import Mid from './mid'
 import {open, wssIntake, wssTick, unsubscribe, date, handleWSSFeed } from './subscribe'
 
+// date: JSON.stringify(Date(Date.now())),
+//         splitIndex: 0,
+//         mid: 0,
+//         lastMid: 80,
+//         total: 0,
+//         units: {},
+//         isSet: false,
+//         sortedFeed: [],
+//         totalOfPrices: 0
 
+
+//pricelevels don't have to already be there - you can use the 1-100
 
 class Book extends Component {
   constructor(){
     super()
     this.state = {
         date: JSON.stringify(Date(Date.now())),
-        splitIndex: 0,
-        mid: 0,
-        lastMid: 80,
-        total: 0,
-        units: {},
+        price: 0,
+        prevPrice: 0,
+        bidBook: {},
+        sortedBids: [],
+        lowBid: 0,
+        askBook: {},
+        sortedAsks: [],
+        highAsk: 0,
+        // askShares: 0,
+        // bidShares: 0,
         isSet: false,
-        sortedFeed: [],
-        totalOfPrices: 0
       }
 
   }
@@ -40,8 +54,8 @@ class Book extends Component {
 
   render (){
 
-    const { mid, lastMid, date, units, sortedFeed } = this.state
-    const change = lastMid > 0 ? (((mid-lastMid)/lastMid)*100).toFixed(2) : ''
+    const { date, price, prevPrice, bidBook, sortedBids, askBook, sortedAsks } = this.state
+    const change = price > prevPrice ? (((price-prevPrice)/prevPrice)*100).toFixed(2) : ''
     return(
       <div className='book'>
         <table>
@@ -51,21 +65,21 @@ class Book extends Component {
             <tbody>
               <span>
                  {
-                  sortedFeed.length > 0 && sortedFeed.slice(0, this.state.splitIndex).map(entry => {
-                    if(+units[entry] > 0){
-                      return <Row bid={[entry, units[entry]]} />
+                  sortedAsks.length > 0 && sortedAsks.map(ask => {
+                    if(askBook[ask] > 0){
+                      return <Row bid={[ask, askBook[ask]]} />
                     }
                   })
                 }
               </span>
               {
-                sortedFeed.length > 0 && <Mid mid={mid} isUp={mid > lastMid} change={change} />
+                price > 0 && <Mid mid={price} isUp={price > prevPrice} change={change} />
               }
               <span>
               {
-                 sortedFeed.length > 0 &&  sortedFeed.slice(this.state.splitIndex).map(entry => {
-                  if(+units[entry] > 0){
-                    return <Row bid={[entry, units[entry]]} />
+                 sortedBids.length > 0 && sortedBids.map(bid => {
+                  if(+bidBook[bid] > 0){
+                    return <Row bid={[bid, bidBook[bid]]} />
                   }
                 })
                 }
