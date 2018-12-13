@@ -52,30 +52,37 @@ class Book extends Component {
     const change = price != prevPrice ? (((price-prevPrice)/prevPrice)*100).toFixed(2) : ''
     const isUp = price >= prevPrice ? 'green' : 'red'
     const changeMessage = prevPrice != 'unset' && prevPrice != price ? ` ${change}%` : '0%'
+
     return(
       <div className='book'>
-        <table>
-          <th id='head' colSpan='2'>ORDERBOOK - ETH:USD<br/>
+          <h2 id='head' colSpan='2'>ORDERBOOK - ETH:USD<br/>
           <span className='date'>{date}</span>
-          </th>
+          </h2>
+        <div className='tableContainer'>
+        <div className='center'>
+        <table>
             <tbody>
                {
-                  sortedAsks.length > 0 && sortedAsks.slice(-49).map(ask => {
-                    if(askBook[ask] > 0){
-                      return <Row bid={[ask, askBook[ask]]} type={'ask'} classStyle='row green'/>}
-                  })
+                  sortedAsks.length > 0 && sortedAsks.filter(ask => { return askBook[ask] != 0 }).slice(-49).map(ask => {
+                      return <Row bid={[ask, askBook[ask]]} type={'ask'} classStyle='row green'/>})
                 }
+                </tbody>
+            </table>
               { price > 0 ? <Mid price={price} isUp={isUp} changeMessage={changeMessage} />
-                          : <th colSpan='2'>OBTAINING PRICE</th>
+                          : <div className='middleDisplay'>OBTAINING PRICE</div>
               }
+              <table>
+                <tbody>
                 {
-                  sortedBids.length > 0 && sortedBids.slice(0, 49).map(bid => {
+                  sortedBids.length > 0 && sortedBids.filter(bid => { return bidBook[bid] != 0 }).slice(0, 49).map(bid => {
                     if(+bidBook[bid] > 0){
                       return <Row bid={[bid, bidBook[bid]]} type={'bid'} classStyle='row red'/> }
                   })
                 }
           </tbody>
         </table>
+        </div>
+        </div>
       </div>)
   }
 }
