@@ -31,14 +31,18 @@ export const open = (socket) => socket.addEventListener('open', function (event)
       socket.send(JSON.stringify(subscriptionMessage));
   });
 
+function norm(num){
+    return (num*100).toFixed()
+  }
 
 export const handleWSSFeed = (self) => {
-  self.socket.addEventListener('message', async function(event){
+    self.socket.addEventListener('message', async function(event){
         event = JSON.parse(event.data)
         if(event.type === "match"){
+            let price = norm(event.price)
             self.setState({
-              price: event.price,
-              prevPrice: self.state.price > 0 ? self.state.price : event.price
+              price,
+              prevPrice: +self.state.price > 0 ? self.state.price : price
             })
         }
         if(event.type == "snapshot" && !self.state.isSet){
@@ -54,27 +58,28 @@ export const handleWSSFeed = (self) => {
           })
         }
         else if(event.type === "l2update"){
+            let price = norm(event.changes[0][1])
+            let size = norm(event.changes[0][2])
             if(event.changes[0][0] === "buy" && event.changes[0][1] > self.state.lowBid){
-            //update the book and the array if nescissary
-            let newBid = [event.changes[0][1], event.changes[0][2]]
-            //takes in the new bid and updates the book, and returns a new sorted array if it's an add
-            let { newBook, newSorted } = l2update(newBid, self.state.bidBook, self.state.sortedBids)
+            let newBid = [price, size]
+            let { newBook, newSorted } = l2update(newBid, self.state.bidBook, self.state.sortedBids, 'buy')
             self.setState({
                 bidBook: newBook,
                 sortedBids: newSorted
               })
             }
             if(event.changes[0][0] === "sell" && event.changes[0][1] < self.state.highAsk){
-            //update the book and the array as needed
-            let newAsk = [event.changes[0][1], event.changes[0][2]]
-            let { newBook, newSorted } = l2update(newBid, self.state.bidBook, self.state.sortedBids)
-            self.setState({
-                askBook: newBook,
-                sortedAsks: newSorted
-              })
+                let price = norm(event.changes[0][1])
+                let size = norm(event.changes[0][2])
+                let newAsk = [price, size]
+                let { newBook, newSorted } = l2update(newAsk, self.state.bidBook, self.state.sortedBids, 'ask')
+                self.setState({
+                    askBook: newBook,
+                    sortedAsks: newSorted
+                    })
+                }
             }
-         }
-      })
+    })
 }
 
 //intake: takes bids and asks, otputs sorted and books
@@ -82,32 +87,36 @@ export function wssIntake(bids, asks){
     let bidBook = {}
     let askBook = {}
     bids.forEach(bid => {
-        let key = (bid[0]*100).toFixed()
-        let value = (bid[1]*100).toFixed()
+        let key = norm(bid[0])
+        let value = norm(bid[1])
         bidBook[key] = value
     })
     asks.forEach(ask => {
-        let key = (bid[0]*100).toFixed()
-        let value = (bid[1]*100).toFixed()
+        let key = norm(ask[0])
+        let value = norm(ask[1])
         askBook[key] = value
     })
     let sortedBids = Object.keys(bidBook).sort((a, b) => {
-        return b - a
+        return +b - +a
       })
     let sortedAsks = Object.keys(askBook).sort((a, b) => {
-        return b - a
+        return +a - +b
       })
     return { bidBook, askBook, sortedBids, sortedAsks }
 }
 
 
 //l2update(bid, self.state.bidBook, self.state.sortedBids)
-function l2update(bid, book, sorted){
+function l2update(bid, book, sorted, type){
     let newBook = {...book}
     newBook[bid[0]] = bid[1]
     let newSorted = [...sorted]
     if(!book[bid[0]]){
-      newSorted = [...newSorted, bid[0]].sort((a, b) => a - b)
+      if(type === 'buy'){
+          newSorted = [...newSorted, bid[0]].sort((a, b) => +a - +b)
+      }else{
+        newSorted = [...newSorted, bid[0]].sort((a, b) => +b - +a)
+      }
     }
     return { newBook, newSorted }
 }
