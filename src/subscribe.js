@@ -61,10 +61,10 @@ export const handleWSSFeed = (self) => {
           await self.setState({
             bidBook,
             sortedBids,
-            lowBid: sortedBids[25][0],
+            lowBid: sortedBids[75][0],
             askBook,
             sortedAsks,
-            highAsk: sortedAsks[25][0],
+            highAsk: sortedAsks[75][0],
             isSet: true
           })
         }
