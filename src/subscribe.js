@@ -57,7 +57,7 @@ export const handleWSSFeed = (self) => {
             })
         }
         if(event.type == "snapshot" && !self.state.isSet){
-          const { bidBook, askBook, sortedBids, sortedAsks } = await wssIntake(event.bids.slice(0, 101), event.asks.slice(0, 101))
+          const { bidBook, askBook, sortedBids, sortedAsks } = await wssIntake(event.bids.slice(0, 105), event.asks.slice(0, 105))
           await self.setState({
             bidBook,
             sortedBids,
