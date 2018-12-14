@@ -81,7 +81,7 @@ export const handleWSSFeed = (self) => {
             }
             if(event.changes[0][0] === "sell"){
                 let newAsk = [price, size]
-                let { newBook, newSorted } = l2update(newAsk, self.state.askBook, self.state.sortedAsks, 'ask', self.state.lowBid)
+                let { newBook, newSorted } = l2update(newAsk, self.state.askBook, self.state.sortedAsks, 'ask')
                 self.setState({
                     askBook: newBook,
                     sortedAsks: newSorted
@@ -117,7 +117,7 @@ function wssIntake(bids, asks){
 
 
 
-function l2update(bid, book, sorted, type, low){
+function l2update(bid, book, sorted, type){
     let newBook = {...book}
     newBook[bid[0]] = bid[1]
     let newSorted = [...sorted]
