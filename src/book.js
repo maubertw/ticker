@@ -13,10 +13,8 @@ class Book extends Component {
         prevPrice: 'unset',
         bidBook: {},
         sortedBids: [],
-        lowBid: 0,
         askBook: {},
         sortedAsks: [],
-        highAsk: 0,
         isSet: false,
       }
   }

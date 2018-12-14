@@ -48,7 +48,7 @@ export const handleWSSFeed = (self) => {
     self.socket.addEventListener('message', async function(event){
         event = JSON.parse(event.data)
         let previous = self.state.prevPrice
-        if(event.type === "match"){
+        if(event.type === 'match'){
             let price = norm(event.price)
             let prev = previous !== 'unset' ? previous : price
             self.setState({
@@ -56,22 +56,20 @@ export const handleWSSFeed = (self) => {
               prevPrice: prev
             })
         }
-        if(event.type == "snapshot" && !self.state.isSet){
+        if(event.type === 'snapshot' && !self.state.isSet){
           const { bidBook, askBook, sortedBids, sortedAsks } = await wssIntake(event.bids.slice(0, 105), event.asks.slice(0, 105))
           await self.setState({
             bidBook,
             sortedBids,
-            lowBid: sortedBids[99][0],
             askBook,
             sortedAsks,
-            highAsk: sortedAsks[99][0],
             isSet: true
           })
         }
-        else if(event.type === "l2update"){
+        else if(event.type === 'l2update'){
             let price = norm(event.changes[0][1])
             let size = event.changes[0][2]
-            if(event.changes[0][0] === "buy"){
+            if(event.changes[0][0] === 'buy'){
                 let newBid = [price, size]
                 let { newBook, newSorted } = l2update(newBid, self.state.bidBook, self.state.sortedBids, 'buy')
                 self.setState({
@@ -79,7 +77,7 @@ export const handleWSSFeed = (self) => {
                     sortedBids: newSorted
                 })
             }
-            if(event.changes[0][0] === "sell"){
+            if(event.changes[0][0] === 'sell'){
                 let newAsk = [price, size]
                 let { newBook, newSorted } = l2update(newAsk, self.state.askBook, self.state.sortedAsks, 'ask')
                 self.setState({
