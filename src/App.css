@@ -1,131 +1,114 @@
+
 .App {
   display: flex;
   justify-content: center;
-  padding: 5vh 0;
+  padding: 0;
+  margin: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #041d44;
+  background-color: white;
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-
-}
-
-span {
-  margin: 0;
-  padding: 0;
-  display: inline-block;
+  font-weight: 300;
 }
 
 .book {
-  width: 50vw;
+  margin-top: 75px;
   text-align: center;
 }
 
-th {
-  height: 30px;
-  padding: 10px 0;
-  /* display: inline-block */
-}
-
 #head {
-  background-color: lightgray;
-
+  background-color:#ADAC9C;
+  padding: 10px;
+  padding-right: 0;
+  box-sizing: border-box;
+  width: 520px;
+  margin: 0px;
 }
 
-.middleDisplay {
-  min-height: 50px;
-  max-height: 50px;
-  padding-top: 0px;
-  background-color: white;
-  width: 526px;
-  border-left: 1px solid black;
-  border-right: 1px solid black;
-  border-collapse: collapse;
-
-}
-
-#mid-price {
-
-}
-
-#mid-change {
-
+.date {
+  font-weight: 200;
+  font-size: .75em
 }
 
 .green {
-  color: green
+  color: #5B7200
 }
 
 .red {
-  color: red
-}
-
-table {
-  width: 520px;
-  border-spacing: 0;
-  max-height: 600px;
-  min-height: 600px;
-  margin: 1
-
-
-
-}
-
-h2 {
-  width: 527px;
-  margin: 0px
+  color: #D3193B
 }
 
 .tableContainer {
-  width: 550px;
+  width: 540px;
   padding: 0;
   margin: 0;
   max-height: 600px;
   min-height: 600px;
   overflow: scroll;
-  /* display: flex;
-  justify-content: center;
-  flex-direction: column */
-
-
 }
 
-/* .center {
-  margin: auto
-} */
+table {
+  width: 450px;
+  border-spacing: 0;
+  max-height: 600px;
+  min-height: 600px;
+  margin: 1
+}
+
+.row {
+  font-size: 15px;
+  margin: 0;
+  padding: 1px;
+  box-sizing: border-box;
+}
+
+tr:nth-child(even) {
+  background: #F4F2E6
+}
+
+tr:nth-child(odd) {
+  background: #FCFBF4
+}
 
 td {
   max-width: 260px;
   min-width: 260px;
-
-
+  padding-right: 50px;
+  box-sizing: border-box
 }
 
-.row {
-  /* font-size: 10px; */
-  margin: 0
+.middleDisplay {
+  min-height: 45px;
+  padding: 11px 0;
+  box-sizing: border-box;
+  background-color: #D3D2BE;
+  width: 520px;
+  font-size: 2em;
+  font-weight: 200
 }
 
-.date {
-  font-weight: 200;
-  font-size: .85em
+.middleDisplay span {
+  margin-left: 30px
 }
 
 .size {
   text-align: right;
 }
 
-table, th, td {
-  border: 1px solid black;
-  border-collapse: collapse;
-  background-color: white;
 
 
-}
 
-.percent {
-  background-color: lightgreen;
-  float: right;
-  position: relative;
-  right: 2px;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
 

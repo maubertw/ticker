@@ -9,7 +9,7 @@ const subscriptionMessage = {
     ]
   }
 
-  export const unsubscribe = {
+export const unsubscribeMessage = {
     "type": "unsubscribe",
     "product_ids": [
         "ETH-USD",
@@ -23,7 +23,7 @@ const subscriptionMessage = {
 export const date = (self) => {
     setInterval(
         () => self.setState({
-          date: JSON.stringify(Date(Date.now()))
+          date: Date(Date.now())
         }),
         1000)
 }
@@ -34,13 +34,13 @@ export const open = (socket) => socket.addEventListener('open', function (event)
   });
 
 
-
-//To insure no inaccuracies caused by floats this function takes the input price/size strings rounds to the second decimal place and returns them as strings so that they can be easily compared as either strings or integers
+//To insure no inaccuracies caused by floats this function takes the input
+//price/size strings rounds to the second decimal place and returns them as
+//strings so that they can be easily compared as strings or eaasily type
+//coersed as integers
 export function norm(num){
     return (num*100).toFixed()
-  }
-
-  //only change the percent if the price is not equal to the prevous price
+}
 
 
 
@@ -57,31 +57,29 @@ export const handleWSSFeed = (self) => {
             })
         }
         if(event.type == "snapshot" && !self.state.isSet){
-          const { bidBook, askBook, sortedBids, sortedAsks } = await wssIntake(event.bids.slice(0, 100), event.asks.slice(0, 100))
+          const { bidBook, askBook, sortedBids, sortedAsks } = await wssIntake(event.bids.slice(0, 101), event.asks.slice(0, 101))
           await self.setState({
             bidBook,
             sortedBids,
-            lowBid: sortedBids[99][0],
+            lowBid: sortedBids[75][0],
             askBook,
             sortedAsks,
-            highAsk: sortedAsks[99][0],
+            highAsk: sortedAsks[75][0],
             isSet: true
           })
         }
         else if(event.type === "l2update"){
             let price = norm(event.changes[0][1])
-            let size = norm(event.changes[0][2])
-            if(event.changes[0][0] === "buy"){ // && event.changes[0][1] > self.state.lowBid){
-            let newBid = [price, size]
-            let { newBook, newSorted } = l2update(newBid, self.state.bidBook, self.state.sortedBids, 'buy')
-            self.setState({
-                bidBook: newBook,
-                sortedBids: newSorted
-              })
+            let size = event.changes[0][2]
+            if(event.changes[0][0] === "buy"){
+                let newBid = [price, size]
+                let { newBook, newSorted } = l2update(newBid, self.state.bidBook, self.state.sortedBids, 'buy')
+                self.setState({
+                    bidBook: newBook,
+                    sortedBids: newSorted
+                })
             }
-            if(event.changes[0][0] === "sell"){ // && event.changes[0][1] < self.state.highAsk){
-                let price = norm(event.changes[0][1])
-                let size = event.changes[0][2]
+            if(event.changes[0][0] === "sell"){
                 let newAsk = [price, size]
                 let { newBook, newSorted } = l2update(newAsk, self.state.bidBook, self.state.sortedBids, 'ask', self.state.lowBid)
                 self.setState({
@@ -113,14 +111,13 @@ function wssIntake(bids, asks){
     let sortedAsks = Object.keys(askBook).sort((a, b) => {
         return +a - +b
       })
-      console.log(sortedAsks, sortedBids)
+
     return { bidBook, askBook, sortedBids, sortedAsks }
 }
 
 
 
 function l2update(bid, book, sorted, type, low){
-    //console.log(bid, 'type', type)
     let newBook = {...book}
     newBook[bid[0]] = bid[1]
     let newSorted = [...sorted]
@@ -134,7 +131,6 @@ function l2update(bid, book, sorted, type, low){
     return { newBook, newSorted }
 }
 
-//
 
 
 
