@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renders two tables with bid and ask price 1`] = `
+<div
+  className="book"
+>
+  <h2
+    id="head"
+  >
+    ORDERBOOK - ETH:USD
+    <br />
+    <span
+      className="date"
+    >
+      Fri Dec 14 2018 09:49:29 GMT-0600 (Central Standard Time)
+    </span>
+  </h2>
+  <div
+    className="tableContainer"
+  >
+    <table>
+      <tbody />
+    </table>
+    <div
+      className="middleDisplay"
+    >
+      OBTAINING CURRENT PRICE INFORMATION
+    </div>
+    <table>
+      <tbody />
+    </table>
+  </div>
+</div>
+`;
