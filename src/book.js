@@ -52,7 +52,7 @@ class Book extends Component {
           <table>
             <tbody>
                 {
-                  sortedAsks.length > 0 && sortedAsks.filter(ask => { return askBook[ask] != 0 }).slice(-99).map(ask => {
+                  sortedAsks.length > 0 && sortedAsks.filter(ask => { return askBook[ask] != 0 }).slice(-49).map(ask => {
                       return <Row bid={[ask, askBook[ask]]} type={'ask'} classStyle='red'/>})
                 }
               </tbody>
@@ -64,7 +64,7 @@ class Book extends Component {
             <table>
               <tbody>
                 {
-                  sortedBids.length > 0 && sortedBids.filter(bid => { return bidBook[bid] != 0 }).slice(0, 99).map(bid => {
+                  sortedBids.length > 0 && sortedBids.filter(bid => { return bidBook[bid] != 0 }).slice(0, 49).map(bid => {
                   return <Row bid={[bid, bidBook[bid]]} type={'bid'} classStyle='green'/> })
                 }
               </tbody>

@@ -61,10 +61,10 @@ export const handleWSSFeed = (self) => {
           await self.setState({
             bidBook,
             sortedBids,
-            lowBid: sortedBids[75][0],
+            lowBid: sortedBids[25][0],
             askBook,
             sortedAsks,
-            highAsk: sortedAsks[75][0],
+            highAsk: sortedAsks[25][0],
             isSet: true
           })
         }
@@ -81,7 +81,7 @@ export const handleWSSFeed = (self) => {
             }
             if(event.changes[0][0] === "sell"){
                 let newAsk = [price, size]
-                let { newBook, newSorted } = l2update(newAsk, self.state.bidBook, self.state.sortedBids, 'ask', self.state.lowBid)
+                let { newBook, newSorted } = l2update(newAsk, self.state.askBook, self.state.sortedAsks, 'ask', self.state.lowBid)
                 self.setState({
                     askBook: newBook,
                     sortedAsks: newSorted
@@ -109,7 +109,7 @@ function wssIntake(bids, asks){
         return +b - +a
       })
     let sortedAsks = Object.keys(askBook).sort((a, b) => {
-        return +a - +b
+        return +b - +a
       })
 
     return { bidBook, askBook, sortedBids, sortedAsks }
@@ -124,8 +124,8 @@ function l2update(bid, book, sorted, type, low){
     if(!book[bid[0]]){
       if(type === 'buy'){
           newSorted = [...newSorted, bid[0]].sort((a, b) => +b - +a)
-      }else if(+bid[0] >= +low){
-          newSorted = [...newSorted, bid[0]].sort((a, b) => +a - +b)
+      }else{
+          newSorted = [...newSorted, bid[0]].sort((a, b) => +b - +a)
       }
     }
     return { newBook, newSorted }
