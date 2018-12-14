@@ -36,8 +36,8 @@ export const open = (socket) => socket.addEventListener('open', function (event)
 
 //To insure no inaccuracies caused by floats this function takes the input
 //price/size strings rounds to the second decimal place and returns them as
-//strings so that they can be easily compared as strings or eaasily type
-//coersed as integers
+//strings so that they can be easily compared as strings or easily type
+//coersed into integers
 export function norm(num){
     return (num*100).toFixed()
 }
