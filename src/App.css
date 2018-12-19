@@ -8,7 +8,7 @@
   height: 100vh;
   background-color: white;
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-  font-weight: 300;
+  font-weight: 200;
 }
 
 .book {
@@ -52,7 +52,6 @@ table {
   border-spacing: 0;
   max-height: 600px;
   min-height: 600px;
-  margin: 1
 }
 
 .row {
@@ -84,7 +83,6 @@ td {
   background-color: #D3D2BE;
   width: 520px;
   font-size: 2em;
-  font-weight: 200
 }
 
 .middleDisplay span {

@@ -38,8 +38,10 @@ class Book extends Component {
   render (){
     const { date, price, prevPrice, bidBook, sortedBids, askBook, sortedAsks } = this.state
     const isUp = price >= prevPrice ? 'green' : 'red'
+    //optimization: move these calculations to the CurrentPriceDisplay component
+    //separate the nested ternary on line 44
     const change = price !== prevPrice ? (((price-prevPrice)/prevPrice)*100).toFixed(2) : ''
-    const changeMessage = prevPrice !== 'unset' && prevPrice !== price ? ` ${price >= prevPrice ? '+': ''}${change}%` : '0%'
+    const changeMessage = prevPrice !== 'unset' && prevPrice !== price ? ` ${price > prevPrice ? '+': ''}${change}%` : '0%'
 
     return(
       <div className='book'>
@@ -56,6 +58,7 @@ class Book extends Component {
               </tbody>
             </table>
             {
+              //possible bug: change initial price to 'unset' instead of 0, incase it ever reaches 0
               price > 0 ? <CurrentPriceDisplay price={price} isUp={isUp} changeMessage={changeMessage} />
                         : <div className='middleDisplay'>OBTAINING CURRENT PRICE INFORMATION</div>
             }
