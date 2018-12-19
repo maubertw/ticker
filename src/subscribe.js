@@ -129,7 +129,7 @@ function l2update(bid, book, sorted){
     newBook[bid[0]] = bid[1]
     let newSorted = [...sorted]
     if(!book[bid[0]]){
-          newSorted = [...newSorted, bid[0]].sort((a, b) => +b - +a)
+      newSorted = [...newSorted, bid[0]].sort((a, b) => +b - +a)
     }
     return { newBook, newSorted }
 }
